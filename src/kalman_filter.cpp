@@ -36,9 +36,9 @@ void KalmanFilter::Update(const VectorXd &z) {
   VectorXd y = z - z_pred;
 
   MatrixXd Ht = H_.transpose();
-  MatrixXd S = H_ * P_ * Ht + R_;
-  MatrixXd Si = S.inverse();
   MatrixXd PHt = P_ * Ht;
+  MatrixXd S = H_ * PHt + R_;
+  MatrixXd Si = S.inverse();
   MatrixXd K = PHt * Si;
 
   //new estimate
@@ -66,12 +66,15 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
   MatrixXd z_pred(3, 1);
   z_pred << range, bearing, rr;
-  VectorXd y = z - z_pred;
+  //VectorXd y = z - z_pred;
+  VectorXd y = NormaliseError(z, z_pred);
 
   MatrixXd Ht = H_.transpose();
-  MatrixXd S = H_ * P_ * Ht + R_;
-  MatrixXd Si = S.inverse();
   MatrixXd PHt = P_ * Ht;
+  //MatrixXd S = H_ * P_ * Ht + R_;
+  MatrixXd S = H_ * PHt + R_;
+  MatrixXd Si = S.inverse();
+  //MatrixXd PHt = P_ * Ht;
   MatrixXd K = PHt * Si;
 
   //new estimate
@@ -79,4 +82,17 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   long x_size = x_.size();
   MatrixXd I = MatrixXd::Identity(x_size, x_size);
   P_ = (I - K * H_) * P_;
+}
+VectorXd KalmanFilter::NormaliseError(const VectorXd &z, const VectorXd &z_pred){
+//This function ensures that the phi angle is inbetween -pi and pi
+  VectorXd NormError = VectorXd(3);
+  NormError = z - z_pred;
+  while (NormError[1] < -M_PI) {
+	NormError[1] += 2*M_PI;
+  }
+
+  while (NormError[1] > M_PI) {
+	NormError[1] -= 2*M_PI;
+  }
+  return NormError;
 }

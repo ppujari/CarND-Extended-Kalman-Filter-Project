@@ -63,6 +63,8 @@ public:
    * @param z The measurement at k+1
    */
   void UpdateEKF(const Eigen::VectorXd &z);
+  //define a normalisation check for the phi angle to be between -pi and pi
+  Eigen::VectorXd NormaliseError(const Eigen::VectorXd &z, const Eigen::VectorXd &z_pred);
 
 };
 
